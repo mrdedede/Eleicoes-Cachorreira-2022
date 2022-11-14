@@ -1,0 +1,28 @@
+election_id,username,region
+111,rob,Recife
+112,luc,São Paulo
+113,fee,Paris
+121,gee,Paris
+122,gof,Campinas
+123,fah,Paulista
+131,bob,Recife
+132,rob,Recife
+133,luc,São Paulo
+211,fee,Paris
+212,gee,Paris
+213,gof,Campinas
+221,fah,Paulista
+222,bob,Recife
+223,rob,Recife
+231,luc,São Paulo
+232,fee,Paris
+233,gee,Paris
+311,gof,Campinas
+312,fah,Paulista
+313,bob,Recife
+321,rob,Recife
+322,luc,São Paulo
+323,fee,Paris
+331,gee,Paris
+332,gof,Campinas
+333,fah,Paulista
