@@ -1,4 +1,4 @@
-import gc
+import copy as cp
 import streamlit as st
 import pandas as pd
 
@@ -33,12 +33,13 @@ def login(el_id, user):
     # Spinner para carregar a tela de login
     with st.spinner('Logando, por favor aguarde...'):
         # Ler os dados eleitorais e encontrar o usuário buscaso
-        elector_data = pd.read_csv("./election_ids.csv")
+        elector_data = pd.read_csv("election_ids.csv")
         cur_elector = elector_data.loc[elector_data['election_id'] == el_id].reset_index()
         cur_elector = cur_elector.drop(columns=['index'])
         if user == cur_elector['username'][0]:
             # Checar se o usuário já votou
-            voted = check_if_voted(el_id)
+            voters = pd.read_csv("voters_that_voted.csv")
+            voted = check_if_voted(voters, el_id)
             if not voted:
                 st.success("Logado!")
                 cur_region = elector_data.loc[elector_data['election_id'] == el_id]['region']
@@ -53,19 +54,19 @@ def login(el_id, user):
             return False
 
 # Checa se o usuário votou ou não
-def check_if_voted(el_id):
-    # Checa se o ID de eleitor do usuário se encontra no Dataset
-    voted_dataset = pd.read_csv("voters_that_voted.csv")
-    vote_check = voted_dataset.loc[voted_dataset['election_id'] == el_id]
+def check_if_voted(voted_dataset, el_id):
+    # Divide os IDs de eleitor presente no dataset pelo do eleitor atual
+    new_data = voted_dataset['election_id'].astype('float').divide(int(el_id))
+    new_data = pd.DataFrame(new_data)
+    # Checa se algum deles é 1 (indicando repetição)
+    not_voted = new_data.loc[new_data['election_id'] == 1.000000].empty
     # Caso tenha votado, retornar um erro e True
-    if not vote_check.empty:
-        st.session_state.vote_data = True
+    if not not_voted:
         st.error('Você já votou nessas eleições!')
+        st.session_state.vote_data = False
         return True
     # Caso não tenha votado, retornar False e deletar o dataset de votos depositados da memória
     else:
-        del voted_dataset
-        gc.collect()
         return False
 
 # Mostra aos usuários os candidatos disponíveis para receber o seu voto
@@ -90,7 +91,8 @@ def voting_screen():
 
 def write_vote():
     # Checar se o eleitor já depositou voto
-    unable_to_vote = check_if_voted(st.session_state.electoral_id)
+    voters = pd.read_csv('voters_that_voted.csv')
+    unable_to_vote = check_if_voted(voters, st.session_state.electoral_id)
     if not unable_to_vote:
         # Escrever o voto em votes_deposited.csv
         new_vote = [st.session_state.vote_data, st.session_state.voting_region]
@@ -113,4 +115,9 @@ else:
     if 'vote_data' not in st.session_state:
         voting_screen()
     else:
-        st.success("Obrigado por votar nas Eleições Cachorreira!")
+        # Eleitor que o voto foi cadastrado agora
+        if st.session_state.vote_data:
+            st.success("Obrigado por votar nas Eleições Cachorreira!")
+        # Eleitor que já votou
+        else:
+            st.error("Você já votou nessas eleições!")
